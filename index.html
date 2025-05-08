@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>To-Do List Website</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      background: #f9f9f9;
+      padding-bottom: 70px;
+    }
+    header {
+      background-color: #1e3799;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+    nav a {
+      color: white;
+      margin: 0 15px;
+      text-decoration: none;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    nav span {
+      float: right;
+      margin-right: 20px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    main {
+      padding: 30px;
+      max-width: 800px;
+      margin: auto;
+    }
+    .section {
+      display: none;
+    }
+    .active {
+      display: block;
+    }
+    form input, form select, form button {
+      display: block;
+      margin: 15px 0;
+      padding: 10px;
+      width: 100%;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      font-size: 16px;
+    }
+    form button {
+      background-color: #1e3799;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    form button:hover {
+      background-color: #0c2461;
+    }
+    #taskList {
+      list-style: none;
+      padding: 0;
+    }
+    .task-item {
+      padding: 15px;
+      margin: 10px 0;
+      background: white;
+      border-left: 6px solid #ccc;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .task-item.high { border-color: red; }
+    .task-item.medium { border-color: orange; }
+    .task-item.low { border-color: green; }
+    button.edit, button.delete {
+      margin-left: 10px;
+      padding: 5px 10px;
+      font-size: 14px;
+    }
+    footer {
+      background-color: #1e3799;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+    h2, h3 {
+      color: #1e3799;
+    }
+    .notice {
+      color: red;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>To-Do List Website</h1>
+    <nav>
+      <a onclick="showSection('home')">Home</a>
+      <a onclick="showSection('login')">Login</a>
+      <a onclick="showSection('signup')">Sign Up</a>
+      <a onclick="showSection('tasks')">Add Task</a>
+      <span id="logoutBtn" style="display:none;" onclick="logout()">Logout</span>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Home -->
+    <section id="home" class="section active">
+      <h2>Welcome to the To-Do List Website!</h2>
+      <p>This web app helps you manage your tasks by allowing you to add, update, and delete tasks with priority levels and due dates. You must log in to manage tasks.</p>
+    </section>
+
+    <!-- Login -->
+    <section id="login" class="section">
+      <h2>Login</h2>
+      <form onsubmit="handleLogin(event)">
+        <input type="email" id="loginEmail" placeholder="Email" required>
+        <input type="password" id="loginPassword" placeholder="Password" required>
+        <button type="submit">Login</button>
+      </form>
+    </section>
+
+    <!-- Signup -->
+    <section id="signup" class="section">
+      <h2>Sign Up</h2>
+      <form>
+        <input type="text" placeholder="Full Name" required>
+        <input type="email" placeholder="Email" required>
+        <input type="password" placeholder="Password" required>
+        <button type="submit">Register</button>
+      </form>
+    </section>
+
+    <!-- Add Task -->
+    <section id="tasks" class="section">
+      <h2>Add New Task</h2>
+      <div class="notice" id="loginNotice" style="display: none;">
+        Please log in to add tasks.
+      </div>
+      <form id="taskForm">
+        <input type="text" id="taskName" placeholder="Task name" required>
+        <input type="text" id="taskDate" readonly>
+        <input type="text" id="taskTime" readonly>
+        <input type="date" id="dueDate" required>
+        <select id="priority" required>
+          <option value="">Select Priority</option>
+          <option value="Low">Low</option>
+          <option value="Medium">Medium</option>
+          <option value="High">High</option>
+        </select>
+        <select id="category" required>
+          <option value="">Select Category</option>
+          <option value="College">College</option>
+          <option value="Official">Official</option>
+          <option value="Personal">Personal</option>
+        </select>
+        <button type="submit">Add Task</button>
+      </form>
+      <h3>Your Tasks</h3>
+      <ul id="taskList"></ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 To-Do List App</p>
+  </footer>
+
+  <script>
+    let isLoggedIn = false;
+    const taskForm = document.getElementById("taskForm");
+    const taskList = document.getElementById("taskList");
+    const loginNotice = document.getElementById("loginNotice");
+    const logoutBtn = document.getElementById("logoutBtn");
+    let tasks = [];
+
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(section => section.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+
+      if (id === "tasks") {
+        if (!isLoggedIn) {
+          taskForm.style.display = "none";
+          loginNotice.style.display = "block";
+        } else {
+          taskForm.style.display = "block";
+          loginNotice.style.display = "none";
+          setDateTime();
+        }
+      }
+    }
+
+    function handleLogin(event) {
+      event.preventDefault();
+      const email = document.getElementById("loginEmail").value;
+      const password = document.getElementById("loginPassword").value;
+
+      if (email && password) {
+        isLoggedIn = true;
+        localStorage.setItem("userId", "1"); // Replace with dynamic user ID from backend later
+        alert("Login successful!");
+        logoutBtn.style.display = "inline";
+        showSection("tasks");
+        loadTasks(); // ✅ Load user tasks from backend
+      }
+    }
+
+    function logout() {
+      isLoggedIn = false;
+      localStorage.removeItem("userId");
+      alert("Logged out.");
+      logoutBtn.style.display = "none";
+      showSection("home");
+    }
+
+    function setDateTime() {
+      const now = new Date();
+      const date = now.toISOString().split("T")[0];
+      const time = now.toTimeString().split(" ")[0].slice(0, 5);
+      document.getElementById("taskDate").value = date;
+      document.getElementById("taskTime").value = time;
+    }
+
+    taskForm?.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (!isLoggedIn) return;
+
+      const name = document.getElementById("taskName").value;
+      const date = document.getElementById("taskDate").value;
+      const time = document.getElementById("taskTime").value;
+      const due = document.getElementById("dueDate").value;
+      const priority = document.getElementById("priority").value;
+      const category = document.getElementById("category").value;
+
+      const task = {
+        id: Date.now(),
+        name,
+        date,
+        time,
+        due,
+        priority,
+        category,
+        completed: false
+      };
+
+      tasks.push(task);
+      renderTasks();
+      taskForm.reset();
+      setDateTime();
+    });
+
+    function renderTasks() {
+      taskList.innerHTML = "";
+      tasks.forEach(task => {
+        const li = document.createElement("li");
+        li.className = `task-item ${task.priority.toLowerCase()}`;
+        if (task.completed) li.style.textDecoration = "line-through";
+
+        li.innerHTML = `
+          <input type="checkbox" ${task.completed ? "checked" : ""} onchange="toggleComplete(${task.id})">
+          <strong>${task.name}</strong><br>
+          Created: ${task.date} ${task.time}<br>
+          Due: ${task.due}<br>
+          Priority: <strong>${task.priority}</strong><br>
+          Category: ${task.category}<br>
+          <button class="edit" onclick="editTask(${task.id})">Edit</button>
+          <button class="delete" onclick="deleteTask(${task.id})">Delete</button>
+        `;
+        taskList.appendChild(li);
+      });
+    }
+
+    function deleteTask(id) {
+      tasks = tasks.filter(t => t.id !== id);
+      renderTasks();
+    }
+
+    function editTask(id) {
+      const task = tasks.find(t => t.id === id);
+      if (task) {
+        document.getElementById("taskName").value = task.name;
+        document.getElementById("dueDate").value = task.due;
+        document.getElementById("priority").value = task.priority;
+        document.getElementById("category").value = task.category;
+        deleteTask(id);
+        setDateTime();
+      }
+    }
+
+    function toggleComplete(id) {
+      const task = tasks.find(t => t.id === id);
+      if (task) {
+        task.completed = !task.completed;
+        renderTasks();
+      }
+    }
+
+    function loadTasks() {
+      const userId = localStorage.getItem("userId");
+
+      fetch("http://localhost:5000/get_tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId })
+      })
+        .then(res => res.json())
+        .then(data => {
+          tasks = data;
+          renderTasks();
+        });
+    }
+
+    window.onload = () => {
+      setDateTime();
+    };
+  </script>
+</body>
+</html>
